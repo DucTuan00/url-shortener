@@ -2,6 +2,12 @@
 
 import { useState, FormEvent } from 'react';
 import { shortenUrl, ShortenResponse } from '@/lib/api';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Link2, ChevronDown, ChevronUp, Scissors, AtSign, AlertCircle } from 'lucide-react';
 
 interface ShortenFormProps {
     onSuccess?: (data: ShortenResponse['data']) => void;
@@ -20,13 +26,11 @@ export default function ShortenForm({ onSuccess }: ShortenFormProps) {
         setLoading(true);
 
         try {
-            const result = await shortenUrl(
-                url,
-                customAlias || undefined,
-            );
+            const result = await shortenUrl(url, customAlias || undefined);
             onSuccess?.(result.data);
             setUrl('');
             setCustomAlias('');
+            setShowOptions(false);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Something went wrong');
         } finally {
@@ -35,57 +39,87 @@ export default function ShortenForm({ onSuccess }: ShortenFormProps) {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="w-full max-w-2xl space-y-4">
-            <div className="flex gap-2">
-                <input
-                    type="url"
-                    value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                    placeholder="Paste your long URL here..."
-                    required
-                    className="flex-1 rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
-                />
-                <button
-                    type="submit"
-                    disabled={loading || !url}
-                    className="rounded-lg bg-blue-600 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                    {loading ? 'Shortening...' : 'Shorten'}
-                </button>
-            </div>
-
-            <button
-                type="button"
-                onClick={() => setShowOptions(!showOptions)}
-                className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            >
-                {showOptions ? '▾ Hide options' : '▸ More options'}
-            </button>
-
-            {showOptions && (
-                <div className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
-                    <div>
-                        <label htmlFor="alias" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Custom alias (optional)
-                        </label>
-                        <input
-                            id="alias"
-                            type="text"
-                            value={customAlias}
-                            onChange={(e) => setCustomAlias(e.target.value)}
-                            placeholder="my-custom-link"
-                            pattern="^[a-zA-Z0-9_-]+$"
-                            minLength={3}
-                            maxLength={50}
-                            className="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                        />
+        <Card className="w-full border-border bg-card">
+            <CardContent className="p-5 sm:p-6">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    {/* URL input row */}
+                    <div className="flex gap-2">
+                        <div className="relative flex-1">
+                            <Link2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                            <Input
+                                type="url"
+                                value={url}
+                                onChange={(e) => setUrl(e.target.value)}
+                                placeholder="https://example.com/your-very-long-url..."
+                                required
+                                className="h-10 pl-9"
+                                aria-label="Long URL to shorten"
+                            />
+                        </div>
+                        <Button
+                            type="submit"
+                            disabled={loading || !url}
+                            className="h-10 gap-2 px-5"
+                        >
+                            <Scissors className="h-4 w-4" />
+                            {loading ? 'Shortening…' : 'Shorten'}
+                        </Button>
                     </div>
-                </div>
-            )}
 
-            {error && (
-                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-            )}
-        </form>
+                    {/* Toggle more options */}
+                    <button
+                        type="button"
+                        onClick={() => setShowOptions(!showOptions)}
+                        className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                        {showOptions ? (
+                            <ChevronUp className="h-3.5 w-3.5" />
+                        ) : (
+                            <ChevronDown className="h-3.5 w-3.5" />
+                        )}
+                        {showOptions ? 'Hide options' : 'More options'}
+                    </button>
+
+                    {/* Expandable options */}
+                    {showOptions && (
+                        <>
+                            <Separator />
+                            <div className="space-y-2">
+                                <Label htmlFor="alias" className="flex items-center gap-1.5 text-sm">
+                                    <AtSign className="h-3.5 w-3.5 text-muted-foreground" />
+                                    Custom alias
+                                    <span className="ml-1 text-xs text-muted-foreground font-normal">(optional)</span>
+                                </Label>
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-sm text-muted-foreground shrink-0">short.ly/</span>
+                                    <Input
+                                        id="alias"
+                                        type="text"
+                                        value={customAlias}
+                                        onChange={(e) => setCustomAlias(e.target.value)}
+                                        placeholder="my-custom-link"
+                                        pattern="^[a-zA-Z0-9_-]+$"
+                                        minLength={3}
+                                        maxLength={50}
+                                        className="h-9"
+                                    />
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    Letters, numbers, hyphens and underscores only (3–50 chars)
+                                </p>
+                            </div>
+                        </>
+                    )}
+
+                    {/* Error message */}
+                    {error && (
+                        <div className="flex items-center gap-2 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                            <AlertCircle className="h-4 w-4 shrink-0" />
+                            {error}
+                        </div>
+                    )}
+                </form>
+            </CardContent>
+        </Card>
     );
 }
