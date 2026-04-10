@@ -2,11 +2,12 @@ import { Router } from 'express';
 import { RedirectController } from '@/modules/redirect/redirect.controller';
 import { RedirectService } from '@/modules/redirect/redirect.service';
 import { UrlRepository } from '@/modules/url/url.repository';
+import { cacheService } from '@/core/cache/cache.service';
 
 const router = Router();
 
 const urlRepository = new UrlRepository();
-const redirectService = new RedirectService(urlRepository);
+const redirectService = new RedirectService(urlRepository, cacheService);
 const redirectController = new RedirectController(redirectService);
 
 // GET /:shortCode — redirect to original URL

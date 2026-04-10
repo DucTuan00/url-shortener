@@ -21,6 +21,23 @@ export interface ApiError {
     errors?: { field: string; message: string }[];
 }
 
+export interface UrlStats {
+    totalClicks: number;
+    uniqueClicks: number;
+    clicksByDate: { date: string; clicks: number }[];
+    topCountries: { country: string; clicks: number }[];
+    topCities: { city: string; clicks: number }[];
+    devices: { deviceType: string; clicks: number }[];
+    browsers: { browser: string; clicks: number }[];
+    operatingSystems: { os: string; clicks: number }[];
+    topReferers: { referer: string; clicks: number }[];
+}
+
+export interface StatsResponse {
+    status: string;
+    data: UrlStats;
+}
+
 export async function shortenUrl(
     url: string,
     customAlias?: string,
@@ -39,6 +56,28 @@ export async function shortenUrl(
     if (!res.ok) {
         const error: ApiError = await res.json();
         throw new Error(error.message || 'Failed to shorten URL');
+    }
+
+    return res.json();
+}
+
+export async function getUrlStats(id: number, days: number = 30): Promise<StatsResponse> {
+    const res = await fetch(`${API_URL}/api/urls/${id}/stats?days=${days}`);
+
+    if (!res.ok) {
+        const error: ApiError = await res.json();
+        throw new Error(error.message || 'Failed to fetch analytics');
+    }
+
+    return res.json();
+}
+
+export async function getUrlById(id: number): Promise<ShortenResponse> {
+    const res = await fetch(`${API_URL}/api/urls/${id}`);
+
+    if (!res.ok) {
+        const error: ApiError = await res.json();
+        throw new Error(error.message || 'Failed to fetch URL');
     }
 
     return res.json();
