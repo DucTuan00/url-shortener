@@ -1,5 +1,6 @@
 import { UrlRepository } from '@/modules/url/url.repository';
 import { IEncodingStrategy } from '@/core/encoding/encoding.interface';
+import { CacheService } from '@/core/cache/cache.service';
 import { config } from '@/core/config';
 import { BadRequestError, ConflictError, NotFoundError } from '@/shared/errors/app-error';
 import { UrlResponse } from '@/shared/types';
@@ -10,6 +11,7 @@ export class UrlService {
     constructor(
         private urlRepository: UrlRepository,
         private encoder: IEncodingStrategy,
+        private cacheService: CacheService,
     ) { }
 
     async createShortUrl(dto: { url: string; customAlias?: string; expiresAt?: string }): Promise<UrlResponse> {
@@ -41,6 +43,18 @@ export class UrlService {
             shortCode,
             customAlias: dto.customAlias,
             expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : undefined,
+        });
+
+        // Pre-populate cache
+        const cacheData = {
+            originalUrl: url.originalUrl,
+            isActive: url.isActive,
+            expiresAt: url.expiresAt?.toISOString() || null,
+            urlId: url.id.toString(),
+        };
+        const slug = url.customAlias || url.shortCode;
+        this.cacheService.setUrl(slug, cacheData).catch((err) => {
+            console.error('Failed to cache URL:', err);
         });
 
         return this.formatUrl(url);
@@ -86,6 +100,16 @@ export class UrlService {
             isActive: data.isActive,
         });
 
+        // Invalidate cache for affected keys
+        const keysToInvalidate = [updated.shortCode];
+        if (url.customAlias) keysToInvalidate.push(url.customAlias);
+        if (updated.customAlias && updated.customAlias !== url.customAlias) {
+            keysToInvalidate.push(updated.customAlias);
+        }
+        this.cacheService.deleteUrls(keysToInvalidate).catch((err) => {
+            console.error('Failed to invalidate cache:', err);
+        });
+
         return this.formatUrl(updated);
     }
 
@@ -94,6 +118,14 @@ export class UrlService {
         if (!url) {
             throw new NotFoundError('URL not found');
         }
+
+        // Invalidate cache
+        const keysToInvalidate = [url.shortCode];
+        if (url.customAlias) keysToInvalidate.push(url.customAlias);
+        this.cacheService.deleteUrls(keysToInvalidate).catch((err) => {
+            console.error('Failed to invalidate cache:', err);
+        });
+
         await this.urlRepository.delete(id);
     }
 

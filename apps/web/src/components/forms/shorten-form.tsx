@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Link2, ChevronDown, ChevronUp, Scissors, AtSign, AlertCircle } from 'lucide-react';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
+import { Link2, ChevronDown, ChevronUp, Scissors, AtSign, AlertCircle, Clock } from 'lucide-react';
 
 interface ShortenFormProps {
     onSuccess?: (data: ShortenResponse['data']) => void;
@@ -16,6 +17,7 @@ interface ShortenFormProps {
 export default function ShortenForm({ onSuccess }: ShortenFormProps) {
     const [url, setUrl] = useState('');
     const [customAlias, setCustomAlias] = useState('');
+    const [expiresAt, setExpiresAt] = useState<Date | undefined>(undefined);
     const [showOptions, setShowOptions] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -26,10 +28,15 @@ export default function ShortenForm({ onSuccess }: ShortenFormProps) {
         setLoading(true);
 
         try {
-            const result = await shortenUrl(url, customAlias || undefined);
+            const result = await shortenUrl(
+                url,
+                customAlias || undefined,
+                expiresAt ? expiresAt.toISOString() : undefined,
+            );
             onSuccess?.(result.data);
             setUrl('');
             setCustomAlias('');
+            setExpiresAt(undefined);
             setShowOptions(false);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Something went wrong');
@@ -106,6 +113,23 @@ export default function ShortenForm({ onSuccess }: ShortenFormProps) {
                                 </div>
                                 <p className="text-xs text-muted-foreground">
                                     Letters, numbers, hyphens and underscores only (3–50 chars)
+                                </p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="expires" className="flex items-center gap-1.5 text-sm">
+                                    <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                                    Expiration date
+                                    <span className="ml-1 text-xs text-muted-foreground font-normal">(optional)</span>
+                                </Label>
+                                <DateTimePicker
+                                    value={expiresAt}
+                                    onChange={setExpiresAt}
+                                    placeholder="Pick expiration date & time"
+                                    minDate={new Date()}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Link will stop working after this date
                                 </p>
                             </div>
                         </>

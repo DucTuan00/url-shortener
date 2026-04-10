@@ -58,8 +58,10 @@ export class UrlRepository {
     }
 
     async incrementClickCount(shortCode: string) {
-        return prisma.url.update({
-            where: { shortCode },
+        return prisma.url.updateMany({
+            where: {
+                OR: [{ shortCode }, { customAlias: shortCode }],
+            },
             data: { clickCount: { increment: 1 } },
         });
     }

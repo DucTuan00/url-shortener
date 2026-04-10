@@ -5,14 +5,16 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Copy, Check, ExternalLink, Link2 } from 'lucide-react';
+import { Copy, Check, ExternalLink, Link2, BarChart3 } from 'lucide-react';
+import Link from 'next/link';
 
 interface UrlResultProps {
+    id?: number;
     shortUrl: string;
     originalUrl: string;
 }
 
-export default function UrlResult({ shortUrl, originalUrl }: UrlResultProps) {
+export default function UrlResult({ id, shortUrl, originalUrl }: UrlResultProps) {
     const { copied, copy } = useCopyToClipboard();
 
     // Extract just the path portion for display
@@ -45,31 +47,46 @@ export default function UrlResult({ shortUrl, originalUrl }: UrlResultProps) {
                     <p className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
                         {originalUrl}
                     </p>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => copy(shortUrl)}
-                                className="shrink-0 gap-1.5"
-                            >
-                                {copied ? (
-                                    <>
-                                        <Check className="h-3.5 w-3.5 text-green-600" />
-                                        Copied
-                                    </>
-                                ) : (
-                                    <>
-                                        <Copy className="h-3.5 w-3.5" />
-                                        Copy
-                                    </>
-                                )}
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="top">
-                            {copied ? 'Copied to clipboard!' : 'Copy short URL'}
-                        </TooltipContent>
-                    </Tooltip>
+                    <div className="flex items-center gap-1.5">
+                        {id && (
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="outline" size="sm" className="shrink-0 gap-1.5" asChild>
+                                        <Link href={`/analytics/${id}`}>
+                                            <BarChart3 className="h-3.5 w-3.5" />
+                                            Stats
+                                        </Link>
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">View analytics</TooltipContent>
+                            </Tooltip>
+                        )}
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => copy(shortUrl)}
+                                    className="shrink-0 gap-1.5"
+                                >
+                                    {copied ? (
+                                        <>
+                                            <Check className="h-3.5 w-3.5 text-green-600" />
+                                            Copied
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Copy className="h-3.5 w-3.5" />
+                                            Copy
+                                        </>
+                                    )}
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                                {copied ? 'Copied to clipboard!' : 'Copy short URL'}
+                            </TooltipContent>
+                        </Tooltip>
+                    </div>
                 </div>
             </CardContent>
         </Card>

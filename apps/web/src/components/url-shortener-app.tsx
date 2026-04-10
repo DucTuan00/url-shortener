@@ -46,6 +46,7 @@ export default function UrlShortenerApp() {
                         {recentLinks.map((link) => (
                             <UrlResult
                                 key={link.id}
+                                id={link.id}
                                 shortUrl={link.shortUrl}
                                 originalUrl={link.originalUrl}
                             />
