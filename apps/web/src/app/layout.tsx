@@ -1,13 +1,23 @@
 import type { Metadata } from 'next';
-import { Geist } from 'next/font/google';
-import '@/app/globals.css';
+import { Geist, Geist_Mono } from 'next/font/google';
+import './globals.css';
 import { cn } from "@/lib/utils";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeProvider } from "@/components/theme-provider";
 
-const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
+const geistSans = Geist({
+    subsets: ['latin'],
+    variable: '--font-geist-sans',
+});
+
+const geistMono = Geist_Mono({
+    subsets: ['latin'],
+    variable: '--font-geist-mono',
+});
 
 export const metadata: Metadata = {
-    title: 'URL Shortener',
-    description: 'Shorten your URLs quickly and easily',
+    title: 'URL Shortener — Shorten links instantly',
+    description: 'Shorten your URLs quickly and easily. Share smarter with custom aliases.',
 };
 
 export default function RootLayout({
@@ -16,9 +26,17 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="en" className={cn("font-sans", geist.variable)}>
-            <body className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 font-sans antialiased dark:from-gray-900 dark:to-gray-950">
-                {children}
+        <html
+            lang="en"
+            className={cn(geistSans.variable, geistMono.variable)}
+            suppressHydrationWarning
+        >
+            <body className="min-h-screen bg-background font-sans antialiased" suppressHydrationWarning>
+                <ThemeProvider>
+                    <TooltipProvider>
+                        {children}
+                    </TooltipProvider>
+                </ThemeProvider>
             </body>
         </html>
     );
