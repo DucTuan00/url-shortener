@@ -1,23 +1,26 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import { config } from '@/core/config';
 import { errorHandler } from '@/core/middleware/error-handler';
 import { apiLimiter } from '@/core/middleware/rate-limiter';
 import urlRoutes from '@/modules/url/url.routes';
 import redirectRoutes from '@/modules/redirect/redirect.routes';
 import analyticsRoutes from '@/modules/analytics/analytics.routes';
+import authRoutes from '@/modules/auth/auth.routes';
 import { startClickTrackingWorker } from '@/core/queue/click-tracking.worker';
 
 const app = express();
 
 // Security middleware
 app.use(helmet());
-app.use(cors({ origin: config.cors.origin }));
+app.use(cors({ origin: config.cors.origin, credentials: true }));
 
 // Body parsing
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Rate limiting
 app.use('/api/', apiLimiter);
@@ -28,6 +31,7 @@ app.get('/health', (_req, res) => {
 });
 
 // API routes
+app.use('/api/auth', authRoutes);
 app.use('/api/urls', urlRoutes);
 app.use('/api/urls', analyticsRoutes);
 

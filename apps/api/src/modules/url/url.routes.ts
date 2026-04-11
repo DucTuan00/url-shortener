@@ -7,6 +7,7 @@ import { cacheService } from '@/core/cache/cache.service';
 import { validate } from '@/core/middleware/validate';
 import { createUrlLimiter } from '@/core/middleware/rate-limiter';
 import { createUrlSchema, updateUrlSchema } from '@/modules/url/url.validation';
+import { authenticate, optionalAuth } from '@/core/middleware/auth';
 
 const router = Router();
 
@@ -16,10 +17,10 @@ const encoder = new NanoIdStrategy();
 const urlService = new UrlService(urlRepository, encoder, cacheService);
 const urlController = new UrlController(urlService);
 
-router.post('/', createUrlLimiter, validate(createUrlSchema), urlController.create);
-router.get('/', urlController.getAll);
-router.get('/:id', urlController.getById);
-router.patch('/:id', validate(updateUrlSchema), urlController.update);
-router.delete('/:id', urlController.delete);
+router.post('/', createUrlLimiter, optionalAuth, validate(createUrlSchema), urlController.create);
+router.get('/', authenticate, urlController.getAll);
+router.get('/:id', authenticate, urlController.getById);
+router.patch('/:id', authenticate, validate(updateUrlSchema), urlController.update);
+router.delete('/:id', authenticate, urlController.delete);
 
 export default router;
