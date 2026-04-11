@@ -3,6 +3,7 @@ import { AnalyticsController } from '@/modules/analytics/analytics.controller';
 import { AnalyticsService } from '@/modules/analytics/analytics.service';
 import { ClickRepository } from '@/modules/analytics/click.repository';
 import { UrlRepository } from '@/modules/url/url.repository';
+import { authenticate } from '@/core/middleware/auth';
 
 const router = Router();
 
@@ -12,6 +13,6 @@ const analyticsService = new AnalyticsService(clickRepository, urlRepository);
 const analyticsController = new AnalyticsController(analyticsService);
 
 // GET /api/urls/:id/stats — get analytics for a URL
-router.get('/:id/stats', analyticsController.getStats);
+router.get('/:id/stats', authenticate, analyticsController.getStats);
 
 export default router;

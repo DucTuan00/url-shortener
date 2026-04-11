@@ -3,6 +3,7 @@ export interface CreateUrlInput {
     shortCode: string;
     customAlias?: string;
     expiresAt?: Date;
+    userId?: bigint;
 }
 
 export interface UrlRecord {

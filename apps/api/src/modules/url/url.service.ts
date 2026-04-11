@@ -2,7 +2,7 @@ import { UrlRepository } from '@/modules/url/url.repository';
 import { IEncodingStrategy } from '@/core/encoding/encoding.interface';
 import { CacheService } from '@/core/cache/cache.service';
 import { config } from '@/core/config';
-import { BadRequestError, ConflictError, NotFoundError } from '@/shared/errors/app-error';
+import { BadRequestError, ConflictError, ForbiddenError, NotFoundError } from '@/shared/errors/app-error';
 import { UrlResponse } from '@/shared/types';
 
 const MAX_COLLISION_RETRIES = 3;
@@ -14,7 +14,7 @@ export class UrlService {
         private cacheService: CacheService,
     ) { }
 
-    async createShortUrl(dto: { url: string; customAlias?: string; expiresAt?: string }): Promise<UrlResponse> {
+    async createShortUrl(dto: { url: string; customAlias?: string; expiresAt?: string }, userId?: bigint): Promise<UrlResponse> {
         // Handle custom alias
         if (dto.customAlias) {
             const existing = await this.urlRepository.findByCustomAlias(dto.customAlias);
@@ -43,6 +43,7 @@ export class UrlService {
             shortCode,
             customAlias: dto.customAlias,
             expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : undefined,
+            userId,
         });
 
         // Pre-populate cache
@@ -60,16 +61,13 @@ export class UrlService {
         return this.formatUrl(url);
     }
 
-    async getUrlById(id: bigint): Promise<UrlResponse> {
-        const url = await this.urlRepository.findById(id);
-        if (!url) {
-            throw new NotFoundError('URL not found');
-        }
+    async getUrlById(id: bigint, userId: bigint): Promise<UrlResponse> {
+        const url = await this.findOwnedUrlOrThrow(id, userId);
         return this.formatUrl(url);
     }
 
-    async getAllUrls(page: number, limit: number) {
-        const result = await this.urlRepository.findAll(page, limit);
+    async getAllUrls(page: number, limit: number, userId: bigint) {
+        const result = await this.urlRepository.findAll(page, limit, userId);
         return {
             data: result.urls.map((u: any) => this.formatUrl(u)),
             meta: {
@@ -81,11 +79,8 @@ export class UrlService {
         };
     }
 
-    async updateUrl(id: bigint, data: { customAlias?: string; expiresAt?: string | null; isActive?: boolean }) {
-        const url = await this.urlRepository.findById(id);
-        if (!url) {
-            throw new NotFoundError('URL not found');
-        }
+    async updateUrl(id: bigint, data: { customAlias?: string; expiresAt?: string | null; isActive?: boolean }, userId: bigint) {
+        const url = await this.findOwnedUrlOrThrow(id, userId);
 
         if (data.customAlias && data.customAlias !== url.customAlias) {
             const existing = await this.urlRepository.findByCustomAlias(data.customAlias);
@@ -113,11 +108,8 @@ export class UrlService {
         return this.formatUrl(updated);
     }
 
-    async deleteUrl(id: bigint) {
-        const url = await this.urlRepository.findById(id);
-        if (!url) {
-            throw new NotFoundError('URL not found');
-        }
+    async deleteUrl(id: bigint, userId: bigint) {
+        const url = await this.findOwnedUrlOrThrow(id, userId);
 
         // Invalidate cache
         const keysToInvalidate = [url.shortCode];
@@ -127,6 +119,18 @@ export class UrlService {
         });
 
         await this.urlRepository.delete(id);
+    }
+
+    private async findOwnedUrlOrThrow(id: bigint, userId: bigint) {
+        const url = await this.urlRepository.findById(id);
+        if (!url) {
+            throw new NotFoundError('URL not found');
+        }
+        if (url.userId !== userId) {
+            throw new ForbiddenError('You do not own this URL');
+        }
+
+        return url;
     }
 
     private formatUrl(url: {

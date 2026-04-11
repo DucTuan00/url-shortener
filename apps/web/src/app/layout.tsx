@@ -4,6 +4,7 @@ import './globals.css';
 import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
+import { AuthProvider } from "@/components/auth-provider";
 
 const geistSans = Geist({
     subsets: ['latin'],
@@ -33,9 +34,11 @@ export default function RootLayout({
         >
             <body className="min-h-screen bg-background font-sans antialiased" suppressHydrationWarning>
                 <ThemeProvider>
-                    <TooltipProvider>
-                        {children}
-                    </TooltipProvider>
+                    <AuthProvider>
+                        <TooltipProvider>
+                            {children}
+                        </TooltipProvider>
+                    </AuthProvider>
                 </ThemeProvider>
             </body>
         </html>

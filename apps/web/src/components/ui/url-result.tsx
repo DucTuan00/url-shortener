@@ -5,20 +5,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Copy, Check, ExternalLink, Link2, BarChart3 } from 'lucide-react';
-import Link from 'next/link';
+import { Copy, Check, ExternalLink, Link2 } from 'lucide-react';
 
 interface UrlResultProps {
-    id?: number;
     shortUrl: string;
     originalUrl: string;
 }
 
-export default function UrlResult({ id, shortUrl, originalUrl }: UrlResultProps) {
+export default function UrlResult({ shortUrl, originalUrl }: UrlResultProps) {
     const { copied, copy } = useCopyToClipboard();
-
-    // Extract just the path portion for display
-    const shortPath = shortUrl.replace(/^https?:\/\/[^/]+/, '');
 
     return (
         <Card className="w-full overflow-hidden border-border">
@@ -48,19 +43,6 @@ export default function UrlResult({ id, shortUrl, originalUrl }: UrlResultProps)
                         {originalUrl}
                     </p>
                     <div className="flex items-center gap-1.5">
-                        {id && (
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button variant="outline" size="sm" className="shrink-0 gap-1.5" asChild>
-                                        <Link href={`/analytics/${id}`}>
-                                            <BarChart3 className="h-3.5 w-3.5" />
-                                            Stats
-                                        </Link>
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent side="top">View analytics</TooltipContent>
-                            </Tooltip>
-                        )}
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Button

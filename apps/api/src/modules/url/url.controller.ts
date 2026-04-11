@@ -6,7 +6,8 @@ export class UrlController {
 
     create = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const result = await this.urlService.createShortUrl(req.body);
+            const userId = req.userId ? BigInt(req.userId) : undefined;
+            const result = await this.urlService.createShortUrl(req.body, userId);
             res.status(201).json({ status: 'success', data: result });
         } catch (error) {
             next(error);
@@ -17,7 +18,8 @@ export class UrlController {
         try {
             const page = parseInt(req.query.page as string) || 1;
             const limit = parseInt(req.query.limit as string) || 20;
-            const result = await this.urlService.getAllUrls(page, limit);
+            const userId = BigInt(req.userId as string);
+            const result = await this.urlService.getAllUrls(page, limit, userId);
             res.json({ status: 'success', ...result });
         } catch (error) {
             next(error);
@@ -27,7 +29,8 @@ export class UrlController {
     getById = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const id = BigInt(req.params.id as string);
-            const result = await this.urlService.getUrlById(id);
+            const userId = BigInt(req.userId as string);
+            const result = await this.urlService.getUrlById(id, userId);
             res.json({ status: 'success', data: result });
         } catch (error) {
             next(error);
@@ -37,7 +40,8 @@ export class UrlController {
     update = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const id = BigInt(req.params.id as string);
-            const result = await this.urlService.updateUrl(id, req.body);
+            const userId = BigInt(req.userId as string);
+            const result = await this.urlService.updateUrl(id, req.body, userId);
             res.json({ status: 'success', data: result });
         } catch (error) {
             next(error);
@@ -47,7 +51,8 @@ export class UrlController {
     delete = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const id = BigInt(req.params.id as string);
-            await this.urlService.deleteUrl(id);
+            const userId = BigInt(req.userId as string);
+            await this.urlService.deleteUrl(id, userId);
             res.status(204).send();
         } catch (error) {
             next(error);

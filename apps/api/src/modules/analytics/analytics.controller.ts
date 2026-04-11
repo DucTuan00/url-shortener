@@ -11,7 +11,8 @@ export class AnalyticsController {
 
             const id = BigInt(idParam);
             const days = parseInt(daysParam as string) || 30;
-            const stats = await this.analyticsService.getUrlStats(id, days);
+            const userId = BigInt(req.userId as string);
+            const stats = await this.analyticsService.getUrlStats(id, userId, days);
             res.json({ status: 'success', data: stats });
         } catch (error) {
             next(error);

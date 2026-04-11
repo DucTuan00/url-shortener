@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { getUrlStats, getUrlById, UrlStats, ShortenResponse } from '@/lib/api';
+import { useAuth } from '@/components/auth-provider';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,8 @@ type UrlData = ShortenResponse['data'];
 
 export default function AnalyticsPage() {
     const params = useParams();
+    const router = useRouter();
+    const { user, loading: authLoading } = useAuth();
     const id = Number(params.id);
     const [stats, setStats] = useState<UrlStats | null>(null);
     const [urlData, setUrlData] = useState<UrlData | null>(null);
@@ -37,6 +40,16 @@ export default function AnalyticsPage() {
     const [days, setDays] = useState(30);
 
     useEffect(() => {
+        if (!authLoading && !user) {
+            router.replace('/login');
+        }
+    }, [authLoading, user, router]);
+
+    useEffect(() => {
+        if (authLoading || !user || !id) {
+            return;
+        }
+
         async function load() {
             setLoading(true);
             setError('');
@@ -53,8 +66,17 @@ export default function AnalyticsPage() {
                 setLoading(false);
             }
         }
-        if (id) load();
-    }, [id, days]);
+
+        load();
+    }, [authLoading, days, id, user]);
+
+    if (authLoading || !user) {
+        return (
+            <div className="flex min-h-screen items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+        );
+    }
 
     return (
         <div className="relative flex min-h-screen flex-col">
@@ -77,11 +99,11 @@ export default function AnalyticsPage() {
                 <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-8">
                     {/* Back button */}
                     <Link
-                        href="/"
+                        href="/dashboard"
                         className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
                     >
                         <ArrowLeft className="h-4 w-4" />
-                        Back to home
+                        Back to dashboard
                     </Link>
 
                     {loading && (

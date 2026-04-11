@@ -1,6 +1,6 @@
 import { ClickRepository } from '@/modules/analytics/click.repository';
 import { UrlRepository } from '@/modules/url/url.repository';
-import { NotFoundError } from '@/shared/errors/app-error';
+import { ForbiddenError, NotFoundError } from '@/shared/errors/app-error';
 import { UrlStats } from '@/modules/analytics/analytics.types';
 
 export class AnalyticsService {
@@ -9,10 +9,13 @@ export class AnalyticsService {
         private urlRepository: UrlRepository,
     ) { }
 
-    async getUrlStats(urlId: bigint, days: number = 30): Promise<UrlStats> {
+    async getUrlStats(urlId: bigint, userId: bigint, days: number = 30): Promise<UrlStats> {
         const url = await this.urlRepository.findById(urlId);
         if (!url) {
             throw new NotFoundError('URL not found');
+        }
+        if (url.userId !== userId) {
+            throw new ForbiddenError('You do not own this URL');
         }
 
         const [

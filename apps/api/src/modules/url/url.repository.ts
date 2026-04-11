@@ -9,6 +9,7 @@ export class UrlRepository {
                 originalUrl: data.originalUrl,
                 customAlias: data.customAlias || null,
                 expiresAt: data.expiresAt || null,
+                userId: data.userId || null,
             },
         });
     }
@@ -31,15 +32,17 @@ export class UrlRepository {
         });
     }
 
-    async findAll(page: number = 1, limit: number = 20) {
+    async findAll(page: number = 1, limit: number = 20, userId?: bigint) {
         const skip = (page - 1) * limit;
+        const where = userId ? { userId } : {};
         const [urls, total] = await Promise.all([
             prisma.url.findMany({
+                where,
                 skip,
                 take: limit,
                 orderBy: { createdAt: 'desc' },
             }),
-            prisma.url.count(),
+            prisma.url.count({ where }),
         ]);
         return { urls, total, page, limit };
     }

@@ -1,12 +1,15 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import ShortenForm from '@/components/forms/shorten-form';
 import UrlResult from '@/components/ui/url-result';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ShortenResponse } from '@/lib/api';
-import { History } from 'lucide-react';
+import { useAuth } from '@/components/auth-provider';
+import { History, LayoutDashboard } from 'lucide-react';
 
 interface RecentLink {
     id: number;
@@ -15,6 +18,7 @@ interface RecentLink {
 }
 
 export default function UrlShortenerApp() {
+    const { user } = useAuth();
     const [recentLinks, setRecentLinks] = useState<RecentLink[]>([]);
 
     const handleSuccess = (data: ShortenResponse['data']) => {
@@ -42,11 +46,21 @@ export default function UrlShortenerApp() {
                         <Separator className="flex-1" />
                     </div>
 
+                    {user && (
+                        <div className="flex justify-end">
+                            <Button variant="outline" size="sm" className="gap-1.5" asChild>
+                                <Link href="/dashboard">
+                                    <LayoutDashboard className="h-3.5 w-3.5" />
+                                    Open dashboard for analytics
+                                </Link>
+                            </Button>
+                        </div>
+                    )}
+
                     <div className="space-y-3">
                         {recentLinks.map((link) => (
                             <UrlResult
                                 key={link.id}
-                                id={link.id}
                                 shortUrl={link.shortUrl}
                                 originalUrl={link.originalUrl}
                             />
